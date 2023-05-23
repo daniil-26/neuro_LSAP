@@ -26,20 +26,16 @@ def training(models, examples_number, epochs_number):
     expenses = []
     solutions = []
     i = 0
-    j = 0
     while i < examples_number:
         expense = random_expenses(size)
         try:
             solution = hungarian(expense)
         except:
             solution = None
-            # j += 1
-            # print('=====', j, '=====')
         if solution is not None:
             expenses.append(expense)
             solutions.append(solution)
             i += 1
-            print(i)
 
     x = [[expenses[i][j][k] for j in range(size) for k in range(size)]
          for i in range(examples_number)]
@@ -48,13 +44,11 @@ def training(models, examples_number, epochs_number):
 
 
 def models_save(models, name=''):
-    # [models[i].save(name + '_model' + str(i)) for i in range(len(models))]
     [keras.models.save_model(models[i], name + str(i)) for i in range(len(models))]
 
 
 def models_load(size, name=''):
     return [keras.models.load_model(name + str(i)) for i in range(size)]
-    # return [saved_model.load(name + '_model' + str(i)) for i in range(size)]
 
 
 def accuracy_estimation(models, expenses_size, number_of_test_cases):
