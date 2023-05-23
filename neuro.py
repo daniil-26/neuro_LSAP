@@ -21,8 +21,9 @@ def models_summary(models):
 
 
 def training(models, examples_number, epochs_number):
+    
     size = len(models)
-
+    
     expenses = []
     solutions = []
     i = 0
@@ -64,10 +65,10 @@ def accuracy_estimation(models, expenses_size, number_of_test_cases):
 
     for _ in range(number_of_test_cases):
 
-        expenses = random_expenses(expenses_size)
-
+        expenses = None
         solutions = None
         while solutions is None:
+            expenses = random_expenses(expenses_size)
             try:
                 solutions = hungarian(expenses)
             except:
