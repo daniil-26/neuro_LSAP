@@ -62,8 +62,7 @@ def accuracy_estimation(models, expenses_size, number_of_test_cases):
     random_correct_decision = []
     random_accuracy = []
 
-    for z in range(number_of_test_cases):
-        print(z)
+    for _ in range(number_of_test_cases):
 
         expenses = random_expenses(expenses_size)
 
