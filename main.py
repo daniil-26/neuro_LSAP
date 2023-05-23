@@ -13,3 +13,10 @@ if __name__ == '__main__':
                         expenses_size=4,
                         number_of_test_cases=1000)
 
+    accuracy_estimation(models=models,
+                        expenses_size=3,
+                        number_of_test_cases=1000)
+
+    accuracy_estimation(models=models,
+                        expenses_size=3,
+                        number_of_test_cases=1000)
