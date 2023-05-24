@@ -13,6 +13,17 @@ def hungarian(e):
     return s
 
 
+def greedy(expenses):
+    size = len(expenses)
+    solution = [[0 for _ in range(size)] for _ in range(size)]
+    for i in range(size):
+        j = expenses[i].index(max(expenses[i]))
+        solution[i][j] = 1
+        for k in range(i + 1, size):
+            expenses[k][j] = -1
+    return solution
+
+
 def random_expenses(size):
     return [[random.randint(0, 100) for _ in range(size)] for _ in range(size)]
 
