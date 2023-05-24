@@ -107,4 +107,94 @@ def accuracy_estimation(models, expenses_size, number_of_test_cases):
     print('neuro:    ', neuro_proportion_correct_decision, neuro_average_accuracy)
     print('random:   ', random_proportion_correct_decision, random_average_accuracy)
     print(ratio_proportion_correct_decision, ratio_average_accuracy)
+    
+
+def create_model(size):
+    model = Sequential([
+        Dense(32, input_shape=(pow(size, 2),), activation='relu'),
+        Dense(64, activation='relu'),
+        Dense(256, activation='relu'),
+        Dense(pow(size, 2), activation='relu', kernel_regularizer='l2')
+    ])
+    model.compile(optimizer='Adam', loss='mse', metrics='mae')
+    return model
+
+
+def training_model(model, size, examples_number, epochs_number):
+
+    expenses = []
+    solutions = []
+    i = 0
+    while i < examples_number:
+        expense = random_expenses(size)
+        try:
+            solution = hungarian(expense)
+        except:
+            solution = None
+        if solution is not None:
+            expenses.append(expense)
+            solutions.append(solution)
+            i += 1
+            
+    x = [[expenses[i][j][k] for j in range(size) for k in range(size)] for i in range(examples_number)]
+    y = [[solutions[i][j][k] for j in range(size) for k in range(size)] for i in range(examples_number)]
+    model.fit(x, y, epochs=epochs_number)
+
+
+def model_accuracy_estimation(model, model_size, expenses_size, number_of_test_cases):
+
+    if model_size < expenses_size:
+        print('error')
+        return
+
+    neuro_correct_decision = []
+    neuro_acccuracy = []
+    random_correct_decision = []
+    random_accuracy = []
+
+    for _ in range(number_of_test_cases):
+
+        expenses = None
+        solutions = None
+        while solutions is None:
+            expenses = random_expenses(expenses_size)
+            try:
+                solutions = hungarian(expenses)
+            except:
+                solutions = None
+
+        neuro_expenses = expenses.copy()
+
+        if model_size > expenses_size:
+            neuro_expenses = extension(neuro_expenses, model_size - expenses_size)
+
+        neuro_expenses = [[neuro_expenses[i][j] for i in range(model_size) for j in range(model_size)]]
+        neuro_solutions = list(model.predict(neuro_expenses)[0])
+        neuro_solutions = [[neuro_solutions[i * model_size + j] for j in range(model_size)] for i in range(model_size)]
+
+        if model_size > expenses_size:
+            neuro_solutions = contraction(neuro_solutions, model_size - expenses_size)
+
+        neuro_solutions = [solution_transformation(solution) for solution in neuro_solutions]
+        neuro_solutions = collision_avoidance(expenses, neuro_solutions)
+
+        neuro_correct_decision.append(1 if solutions == neuro_solutions else 0)
+        neuro_acccuracy.append(objective_function(expenses, neuro_solutions) / objective_function(expenses, solutions))
+
+        random_solutions = random_solution(expenses_size)
+
+        random_correct_decision.append(1 if solutions == random_solutions else 0)
+        random_accuracy.append(objective_function(expenses, random_solutions) / objective_function(expenses, solutions))
+
+    neuro_proportion_correct_decision = mean(neuro_correct_decision)
+    neuro_average_accuracy = mean(neuro_acccuracy)
+    random_proportion_correct_decision = mean(random_correct_decision)
+    random_average_accuracy = mean(random_accuracy)
+
+    ratio_proportion_correct_decision = neuro_proportion_correct_decision / random_proportion_correct_decision
+    ratio_average_accuracy = neuro_average_accuracy / random_average_accuracy
+
+    print('neuro:    ', neuro_proportion_correct_decision, neuro_average_accuracy)
+    print('random:   ', random_proportion_correct_decision, random_average_accuracy)
+    print(ratio_proportion_correct_decision, ratio_average_accuracy)
 
