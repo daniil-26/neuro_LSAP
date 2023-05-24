@@ -7,9 +7,9 @@ from solve import *
 
 def create_models(size):
     models = [Sequential([
-        Dense(2 * pow(size, 2), input_shape=(pow(size, 2),), activation='relu'),
-        Dense(4 * pow(size, 2), activation='relu'),
-        Dense(16 * pow(size, 2), activation='relu'),
+        Dense(32, input_shape=(pow(size, 2),), activation='relu'),
+        Dense(64, activation='relu'),
+        Dense(256, activation='relu'),
         Dense(size, activation='relu', kernel_regularizer='l2')
     ]) for _ in range(size)]
     [model.compile(optimizer='Adam', loss='mse', metrics='mae') for model in models]
