@@ -27,7 +27,7 @@ def training(model, dimension, package_size, package_number, epochs_number):
 def accuracy_estimation(model, dimension, examples_number):
 
     conditions, solutions = generate_examples(dimension, examples_number)
-    conditions_copy = conditions.copy()
+    conditions_copy = [[[j for j in i] for i in condition] for condition in conditions]
 
     conditions = conditions_transform(conditions, dimension)
     results = model.predict(conditions)
