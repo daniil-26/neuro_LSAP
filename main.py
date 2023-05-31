@@ -1,36 +1,49 @@
 from neuro import *
+import fnn
+import cnn
 
 
 if __name__ == '__main__':
 
-    model = create_model(size=4)
-    training_model(model=model,
-                   size=4,
-                   examples_number=50000,
-                   epochs_number=30)
-    model_accuracy_estimation(model=model,
-                              model_size=4,
-                              expenses_size=4,
-                              number_of_test_cases=1000)
-    model_accuracy_estimation(model=model,
-                              model_size=4,
-                              expenses_size=3,
-                              number_of_test_cases=1000)
-    model_accuracy_estimation(model=model,
-                              model_size=4,
-                              expenses_size=2,
-                              number_of_test_cases=1000)
-    
-    models = create_models(size=4)
-    training(models=models,
-             examples_number=50000,
-             epochs_number=30)
-    accuracy_estimation(models=models,
-                        expenses_size=4,
-                        number_of_test_cases=1000)
-    accuracy_estimation(models=models,
-                        expenses_size=3,
-                        number_of_test_cases=1000)
-    accuracy_estimation(models=models,
-                        expenses_size=3,
-                        number_of_test_cases=1000)
+    dimension = 4
+    package_size = 1000
+    package_number = 50
+    epochs_number = 30
+    examples_number = 10000
+
+    model = cnn.create(dimension=dimension)
+    data(model)
+    cnn.training(model=model,
+                 dimension=dimension,
+                 package_size=package_size,
+                 package_number=package_number,
+                 epochs_number=epochs_number)
+    cnn_accuracy = cnn.accuracy_estimation(model=model,
+                                           dimension=dimension,
+                                           examples_number=examples_number)
+
+    model = fnn.create(dimension=dimension)
+    data(model)
+    fnn.training(model=model,
+                 dimension=dimension,
+                 package_size=package_size,
+                 package_number=package_number,
+                 epochs_number=epochs_number)
+    fnn_accuracy = fnn.accuracy_estimation(model=model,
+                                           dimension=dimension,
+                                           examples_number=examples_number)
+
+    greedy_accuracy = accuracy_estimation(method=greedy,
+                                          dimension=dimension,
+                                          examples_number=examples_number)
+
+    random_accuracy = accuracy_estimation(method=random_method,
+                                          dimension=dimension,
+                                          examples_number=examples_number)
+
+    print('cnn:        ', *cnn_accuracy)
+    print('fnn:        ', *fnn_accuracy)
+    print('greedy:     ', *greedy_accuracy)
+    print('random:     ', *random_accuracy)
+
+
