@@ -1,200 +1,68 @@
-from tensorflow import *
-from keras.layers import Dense
-from keras.models import Sequential
 from statistics import *
 from solve import *
 
 
-def create_models(size):
-    models = [Sequential([
-        Dense(32, input_shape=(pow(size, 2),), activation='relu'),
-        Dense(64, activation='relu'),
-        Dense(256, activation='relu'),
-        Dense(size, activation='relu', kernel_regularizer='l2')
-    ]) for _ in range(size)]
-    [model.compile(optimizer='Adam', loss='mse', metrics='mae') for model in models]
-    return models
+def data(model):
+    model.summary()
 
 
-def models_summary(models):
-    [model.summary() for model in models]
+def generate_examples(dimension, examples_number):
 
-
-def training(models, examples_number, epochs_number):
-    
-    size = len(models)
-    
-    expenses = []
+    conditions = []
     solutions = []
+
     i = 0
     while i < examples_number:
-        expense = random_expenses(size)
+        expense = random_condition(dimension)
         try:
             solution = hungarian(expense)
         except:
             solution = None
         if solution is not None:
-            expenses.append(expense)
+            conditions.append(expense)
             solutions.append(solution)
             i += 1
 
-    x = [[expenses[i][j][k] for j in range(size) for k in range(size)]
-         for i in range(examples_number)]
-    y = [[solutions[j][i] for j in range(examples_number)] for i in range(size)]
-    [model.fit(x, example, epochs=epochs_number) for model, example in zip(models, y)]
+    return conditions, solutions
 
 
-def models_save(models, name=''):
-    [keras.models.save_model(models[i], name + str(i)) for i in range(len(models))]
+def collision_avoidance(condition, solution):
+    n = len(condition)
+    for i in range(n):
+        if [solution[j][i] for j in range(n)].count(1) > 1:
+            m = max([condition[j][i] for j in range(n) if solution[j][i]])
+            for j in range(n):
+                if condition[j][i] < m:
+                    solution[j][i] = 0
+    for i in range(n):
+        if 1 not in solution[i]:
+            m = max(condition[i][j] for j in range(n) if 1 not in [solution[k][j] for k in range(n)])
+            for j in range(n):
+                if condition[i][j] == m and 1 not in [solution[k][j] for k in range(n)]:
+                    solution[i][j] = 1
+                    break
+    return solution
 
 
-def models_load(size, name=''):
-    return [keras.models.load_model(name + str(i)) for i in range(size)]
+def solution_transform(solution):
+    dimension = len(solution)
+    for i in range(dimension):
+        m = solution[i].index(max(solution[i]))
+        solution[i] = [1 if j == m else 0 for j in range(dimension)]
+    return solution
 
 
-def accuracy_estimation(models, expenses_size, number_of_test_cases):
-    models_size = len(models)
-    if models_size < expenses_size:
-        print('error')
-        return
+def accuracy_estimation(method, dimension, examples_number):
+    conditions, solutions = generate_examples(dimension, examples_number)
 
-    neuro_correct_decision = []
-    neuro_acccuracy = []
-    random_correct_decision = []
-    random_accuracy = []
+    results = [method(condition) for condition in conditions]
 
-    for _ in range(number_of_test_cases):
+    correct_solutions = [1 if result == solution else 0 for result, solution in zip(results, solutions)]
+    acccuracy = [objective_function(condition, result) / objective_function(condition, solution)
+                 for condition, result, solution in zip(conditions, results, solutions)]
+    correct_solutions_proportion = mean(correct_solutions)
+    average_accuracy = mean(acccuracy)
 
-        expenses = None
-        solutions = None
-        while solutions is None:
-            expenses = random_expenses(expenses_size)
-            try:
-                solutions = hungarian(expenses)
-            except:
-                solutions = None
+    return correct_solutions_proportion, average_accuracy
 
-        neuro_expenses = expenses.copy()
-
-        if models_size > expenses_size:
-            neuro_expenses = extension(neuro_expenses, models_size - expenses_size)
-
-        neuro_expenses = [[neuro_expenses[i][j] for i in range(models_size) for j in range(models_size)]]
-        neuro_solutions = [list(model.predict(neuro_expenses)[0]) for model in models]
-
-        if models_size > expenses_size:
-            neuro_solutions = contraction(neuro_solutions, models_size - expenses_size)
-
-        neuro_solutions = [solution_transformation(solution) for solution in neuro_solutions]
-        neuro_solutions = collision_avoidance(expenses, neuro_solutions)
-
-        neuro_correct_decision.append(1 if solutions == neuro_solutions else 0)
-        neuro_acccuracy.append(objective_function(expenses, neuro_solutions) / objective_function(expenses, solutions))
-
-        random_solutions = random_solution(expenses_size)
-
-        random_correct_decision.append(1 if solutions == random_solutions else 0)
-        random_accuracy.append(objective_function(expenses, random_solutions) / objective_function(expenses, solutions))
-
-    neuro_proportion_correct_decision = mean(neuro_correct_decision)
-    neuro_average_accuracy = mean(neuro_acccuracy)
-    random_proportion_correct_decision = mean(random_correct_decision)
-    random_average_accuracy = mean(random_accuracy)
-
-    ratio_proportion_correct_decision = neuro_proportion_correct_decision / random_proportion_correct_decision
-    ratio_average_accuracy = neuro_average_accuracy / random_average_accuracy
-
-    print('neuro:    ', neuro_proportion_correct_decision, neuro_average_accuracy)
-    print('random:   ', random_proportion_correct_decision, random_average_accuracy)
-    print(ratio_proportion_correct_decision, ratio_average_accuracy)
-    
-
-def create_model(size):
-    model = Sequential([
-        Dense(32, input_shape=(pow(size, 2),), activation='relu'),
-        Dense(64, activation='relu'),
-        Dense(256, activation='relu'),
-        Dense(pow(size, 2), activation='relu', kernel_regularizer='l2')
-    ])
-    model.compile(optimizer='Adam', loss='mse', metrics='mae')
-    return model
-
-
-def training_model(model, size, examples_number, epochs_number):
-
-    expenses = []
-    solutions = []
-    i = 0
-    while i < examples_number:
-        expense = random_expenses(size)
-        try:
-            solution = hungarian(expense)
-        except:
-            solution = None
-        if solution is not None:
-            expenses.append(expense)
-            solutions.append(solution)
-            i += 1
-            
-    x = [[expenses[i][j][k] for j in range(size) for k in range(size)] for i in range(examples_number)]
-    y = [[solutions[i][j][k] for j in range(size) for k in range(size)] for i in range(examples_number)]
-    model.fit(x, y, epochs=epochs_number)
-
-
-def model_accuracy_estimation(model, model_size, expenses_size, number_of_test_cases):
-
-    if model_size < expenses_size:
-        print('error')
-        return
-
-    neuro_correct_decision = []
-    neuro_acccuracy = []
-    random_correct_decision = []
-    random_accuracy = []
-
-    for _ in range(number_of_test_cases):
-
-        expenses = None
-        solutions = None
-        while solutions is None:
-            expenses = random_expenses(expenses_size)
-            try:
-                solutions = hungarian(expenses)
-            except:
-                solutions = None
-
-        neuro_expenses = expenses.copy()
-
-        if model_size > expenses_size:
-            neuro_expenses = extension(neuro_expenses, model_size - expenses_size)
-
-        neuro_expenses = [[neuro_expenses[i][j] for i in range(model_size) for j in range(model_size)]]
-        neuro_solutions = list(model.predict(neuro_expenses)[0])
-        neuro_solutions = [[neuro_solutions[i * model_size + j] for j in range(model_size)] for i in range(model_size)]
-
-        if model_size > expenses_size:
-            neuro_solutions = contraction(neuro_solutions, model_size - expenses_size)
-
-        neuro_solutions = [solution_transformation(solution) for solution in neuro_solutions]
-        neuro_solutions = collision_avoidance(expenses, neuro_solutions)
-
-        neuro_correct_decision.append(1 if solutions == neuro_solutions else 0)
-        neuro_acccuracy.append(objective_function(expenses, neuro_solutions) / objective_function(expenses, solutions))
-
-        random_solutions = random_solution(expenses_size)
-
-        random_correct_decision.append(1 if solutions == random_solutions else 0)
-        random_accuracy.append(objective_function(expenses, random_solutions) / objective_function(expenses, solutions))
-
-    neuro_proportion_correct_decision = mean(neuro_correct_decision)
-    neuro_average_accuracy = mean(neuro_acccuracy)
-    random_proportion_correct_decision = mean(random_correct_decision)
-    random_average_accuracy = mean(random_accuracy)
-
-    ratio_proportion_correct_decision = neuro_proportion_correct_decision / random_proportion_correct_decision
-    ratio_average_accuracy = neuro_average_accuracy / random_average_accuracy
-
-    print('neuro:    ', neuro_proportion_correct_decision, neuro_average_accuracy)
-    print('random:   ', random_proportion_correct_decision, random_average_accuracy)
-    print(ratio_proportion_correct_decision, ratio_average_accuracy)
 
