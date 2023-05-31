@@ -14,7 +14,7 @@ def hungarian(condition):
 
 
 def greedy(condition):
-    condition_copy = condition.copy()
+    condition_copy = [[j for j in i] for i in condition]
     dimension = len(condition_copy)
     solution = [[0 for _ in range(dimension)] for _ in range(dimension)]
     for i in range(dimension):
