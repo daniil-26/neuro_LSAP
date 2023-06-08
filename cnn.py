@@ -6,14 +6,39 @@ from neuro import *
 
 
 def create(dimension):
-    model = Sequential([
-        Conv2D(2, (1, 1), activation='relu', input_shape=(dimension, dimension, 1)),
-        Conv2D(4, (1, 1), activation='relu'),
-        Flatten(),
-        Dense(256, activation='relu'),
-        Dense(pow(dimension, 2), activation='relu')
-    ])
-    model.compile(optimizer='Adam', loss='mse', metrics='mae')
+    
+    model = Sequential()
+
+    model.add(ZeroPadding2D((1, 1), input_shape=(dimension, dimension, 1)))
+    model.add(Convolution2D(8, 3, 3, activation='relu'))
+
+    model.add(ZeroPadding2D((1, 1)))
+    model.add(Convolution2D(16, 3, 3, activation='relu'))
+
+    model.add(ZeroPadding2D((1, 1)))
+    model.add(Convolution2D(32, 3, 3, activation='relu'))
+    model.add(ZeroPadding2D((1, 1)))
+    model.add(Convolution2D(32, 3, 3, activation='relu'))
+
+    model.add(ZeroPadding2D((1, 1)))
+    model.add(Convolution2D(64, 3, 3, activation='relu'))
+    model.add(ZeroPadding2D((1, 1)))
+    model.add(Convolution2D(64, 3, 3, activation='relu'))
+
+    model.add(ZeroPadding2D((1, 1)))
+    model.add(Convolution2D(64, 3, 3, activation='relu'))
+    model.add(ZeroPadding2D((1, 1)))
+    model.add(Convolution2D(64, 3, 3, activation='relu'))
+
+    model.add(Flatten())
+    model.add(Dense(512, activation='relu'))
+    model.add(Dropout(0.5))
+    model.add(Dense(512, activation='relu'))
+    model.add(Dropout(0.5))
+    model.add(Dense(pow(dimension, 2), activation='softmax'))
+
+    model.compile(optimizer='sgd', loss='categorical_crossentropy')
+
     return model
 
 
